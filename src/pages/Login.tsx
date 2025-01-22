@@ -18,9 +18,7 @@ const Login: React.FC = () => {
       toast.success("Login bem-sucedido!");
     } catch (error) {
       console.error("Erro ao fazer login:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Erro ao fazer login."
-      );
+      toast.error(error instanceof Error && "Erro ao fazer login.");
     } finally {
       setIsLoading(false);
     }
