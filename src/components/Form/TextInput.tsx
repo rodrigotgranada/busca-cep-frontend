@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from "react";
+import { forwardRef, useState } from "react";
 import MaskedInput from "react-text-mask";
 import { TextInputProps } from "../../types";
 import { maskRules } from "../../types/maskRules";
