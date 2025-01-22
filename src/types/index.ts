@@ -62,3 +62,15 @@ export interface UserCardProps {
   endereco: string;
   complemento: string;
 }
+
+export interface FormData {
+  nome: string;
+  email: string;
+  cep: string;
+  rua: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  numero: string;
+  complemento: string;
+}

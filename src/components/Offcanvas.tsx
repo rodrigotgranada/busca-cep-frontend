@@ -1,111 +1,97 @@
 import React, { useState } from "react";
 import { IoClose } from "react-icons/io5";
-import { fetchWithAuth } from "../api/fetchWithAuth";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import TextInput from "./Form/TextInput";
-import { OffcanvasProps } from "../types";
+import { FormData, OffcanvasProps } from "../types";
+import { fetchWithAuth } from "../api/fetchWithAuth";
+import { FaSpinner } from "react-icons/fa";
+import { schema } from "../utils/validate";
+import { toast } from "react-toastify";
 
 const Offcanvas: React.FC<OffcanvasProps> = ({ isOpen, onClose, onSave }) => {
-  const initialFormData = {
-    nome: "",
-    email: "",
-    cep: "",
-    rua: "",
-    bairro: "",
-    cidade: "",
-    estado: "",
-    numero: "",
-    complemento: "",
-  };
-
-  const [formData, setFormData] = useState(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [adjustedCepMessage, setAdjustedCepMessage] = useState("");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm<FormData>({
+    defaultValues: {
+      nome: "",
+      email: "",
+      cep: "",
+      rua: "",
+      bairro: "",
+      cidade: "",
+      estado: "",
+      numero: "",
+      complemento: "",
+    },
+    resolver: yupResolver(schema),
+    mode: "onChange",
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-
-    if (name === "cep") {
-      setErrorMessage("");
-      setAdjustedCepMessage("");
-    }
-  };
+  const cep = watch("cep");
 
   const fetchCepData = async (cep: string) => {
     const sanitizedCep = cep.replace("-", "").trim();
 
     if (!sanitizedCep) {
-      setErrorMessage("O campo CEP está vazio.");
-      setIsLoading(false);
+      setValue("rua", "");
+      setValue("bairro", "");
+      setValue("cidade", "");
+      setValue("estado", "");
+      toast.error("O campo CEP está vazio.");
       return;
     }
 
     setIsLoading(true);
-    setErrorMessage("");
-    setAdjustedCepMessage("");
+    setFeedbackMessage("Buscando dados do CEP...");
 
     try {
       const response = await fetchWithAuth(
         `http://localhost:3000/cep/${sanitizedCep}`
       );
 
-      console.log(response);
-
       if (response.status === 4) {
         throw new Error("CEP inválido ou não encontrado.");
       } else if (response.status === 3) {
-        setErrorMessage(response.message || "CEP não encontrado.");
-        setFormData((prev) => ({
-          ...prev,
-          rua: "",
-          bairro: "",
-          cidade: "",
-          estado: "",
-        }));
+        setValue("rua", "");
+        setValue("bairro", "");
+        setValue("cidade", "");
+        setValue("estado", "");
+        setFeedbackMessage("CEP não encontrado.");
         return;
       }
 
       const {
-        data: { cep: locatedCep, street, neighborhood, city, state },
-        status,
-        message,
+        data: { street, neighborhood, city, state },
       } = response;
 
-      setAdjustedCepMessage(status === 2 ? message : "");
-      setFormData((prev) => ({
-        ...prev,
-        cep: status === 2 ? locatedCep : cep,
-        rua: street,
-        bairro: neighborhood,
-        cidade: city,
-        estado: state,
-      }));
+      setValue("rua", street || "");
+      setValue("bairro", neighborhood || "");
+      setValue("cidade", city || "");
+      setValue("estado", state || "");
+      toast.success("Dados do CEP carregados com sucesso!");
+      setFeedbackMessage("");
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Erro ao buscar o CEP."
-      );
+      console.error("Erro ao buscar o CEP:", error);
+      toast.error("Erro ao buscar o CEP.");
+      setFeedbackMessage("Erro ao buscar o CEP.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCepBlur = () => {
-    if (formData.cep) fetchCepData(formData.cep);
+  const onSubmit = (data: FormData) => {
+    onSave(data);
+    reset();
+    toast.success("Cadastro realizado com sucesso!");
   };
-
-  const handleSubmit = () => {
-    onSave(formData);
-    handleClear();
-  };
-
-  const handleClear = () => {
-    setFormData(initialFormData);
-    setAdjustedCepMessage("");
-    setErrorMessage("");
-  };
-
-  const isFormDisabled = isLoading || !!errorMessage;
 
   return (
     <div
@@ -113,6 +99,7 @@ const Offcanvas: React.FC<OffcanvasProps> = ({ isOpen, onClose, onSave }) => {
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
+      {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
         <h2 className="text-lg font-bold">Novo Cadastro</h2>
         <button
@@ -124,123 +111,155 @@ const Offcanvas: React.FC<OffcanvasProps> = ({ isOpen, onClose, onSave }) => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
-        {adjustedCepMessage && (
-          <div className="p-2 bg-yellow-100 border border-yellow-400 text-yellow-800 rounded mb-4">
-            <p>{adjustedCepMessage}</p>
-          </div>
-        )}
-
-        {errorMessage && (
-          <div className="p-2 bg-red-100 border border-red-400 text-red-800 rounded mb-4">
-            <p>{errorMessage}</p>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <TextInput
-            name="nome"
-            value={formData.nome}
-            onChange={handleChange}
-            placeholder="Nome"
-            disabled={isLoading}
-          />
-          <TextInput
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="E-mail"
-            disabled={isLoading}
-          />
-          <TextInput
-            name="cep"
-            value={formData.cep}
-            onChange={handleChange}
-            onBlur={handleCepBlur}
-            placeholder="CEP"
-            maskType="cep"
-            isLoading={isLoading}
-            onButtonClick={() => {
-              if (formData.cep.trim()) {
-                fetchCepData(formData.cep);
-              } else {
-                setErrorMessage("O campo CEP está vazio.");
-              }
-            }}
-          />
-
-          <TextInput
-            name="rua"
-            value={formData.rua}
-            onChange={handleChange}
-            placeholder="Rua"
-            disabled={isLoading}
-            isLoading={isLoading}
-          />
-          <TextInput
-            name="bairro"
-            value={formData.bairro}
-            onChange={handleChange}
-            placeholder="Bairro"
-            disabled={isLoading}
-            isLoading={isLoading}
-          />
-          <TextInput
-            name="cidade"
-            value={formData.cidade}
-            onChange={handleChange}
-            placeholder="Cidade"
-            disabled={isLoading}
-            isLoading={isLoading}
-          />
-          <TextInput
-            name="estado"
-            value={formData.estado}
-            onChange={handleChange}
-            placeholder="Estado"
-            disabled={isLoading}
-            isLoading={isLoading}
-          />
-          <TextInput
-            name="numero"
-            value={formData.numero}
-            onChange={handleChange}
-            placeholder="Número"
-            isLoading={isLoading}
-          />
-          <TextInput
-            name="complemento"
-            value={formData.complemento}
-            onChange={handleChange}
-            placeholder="Complemento"
-            isLoading={isLoading}
-          />
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-10">
+          <FaSpinner className="text-white animate-spin" size={40} />
         </div>
-      </div>
+      )}
 
-      <div className="p-4 border-t flex justify-between">
-        <button
-          onClick={handleClear}
-          className={`py-2 px-4 rounded-md ${
-            isFormDisabled
-              ? "bg-gray-300 text-gray-500"
-              : "bg-red-500 text-white hover:bg-red-600"
-          }`}
-          disabled={isFormDisabled}
-        >
-          Limpar
-        </button>
-        <button
-          onClick={handleSubmit}
-          className={`py-2 px-4 rounded-md ${
-            isFormDisabled
-              ? "bg-gray-300 text-gray-500"
-              : "bg-green-500 text-white hover:bg-green-600"
-          }`}
-          disabled={isFormDisabled}
-        >
-          Salvar
-        </button>
+      {/* Form */}
+      <div className="flex-1 overflow-y-auto p-4 relative">
+        {feedbackMessage && (
+          <div className="mb-4 text-blue-600 font-semibold">
+            {feedbackMessage}
+          </div>
+        )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <Controller
+            name="nome"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                placeholder="Nome"
+                error={errors.nome?.message}
+              />
+            )}
+          />
+          <Controller
+            name="email"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                placeholder="E-mail"
+                error={errors.email?.message}
+              />
+            )}
+          />
+          <Controller
+            name="cep"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                placeholder="CEP"
+                error={errors.cep?.message}
+                maskType="cep"
+                isLoading={isLoading}
+                onBlur={() => fetchCepData(cep)}
+                onButtonClick={() => fetchCepData(cep)}
+              />
+            )}
+          />
+          <Controller
+            name="rua"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                placeholder="Rua"
+                disabled
+                value={field.value || ""}
+                isLoading={isLoading}
+              />
+            )}
+          />
+          <Controller
+            name="bairro"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                placeholder="Bairro"
+                disabled
+                value={field.value || ""}
+                isLoading={isLoading}
+              />
+            )}
+          />
+          <Controller
+            name="cidade"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                placeholder="Cidade"
+                disabled
+                value={field.value || ""}
+                isLoading={isLoading}
+              />
+            )}
+          />
+          <Controller
+            name="estado"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                placeholder="Estado"
+                disabled
+                value={field.value || ""}
+                isLoading={isLoading}
+              />
+            )}
+          />
+          <Controller
+            name="numero"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                placeholder="Número"
+                error={errors.numero?.message}
+              />
+            )}
+          />
+          <Controller
+            name="complemento"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                placeholder="Complemento"
+                value={field.value || ""}
+              />
+            )}
+          />
+
+          {/* Buttons */}
+          <div className="flex justify-between">
+            <button
+              type="button"
+              onClick={() => reset()}
+              className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"
+            >
+              Limpar
+            </button>
+            <button
+              type="submit"
+              className={`py-2 px-4 rounded-md ${
+                isValid
+                  ? "bg-green-500 text-white hover:bg-green-600"
+                  : "bg-gray-300 text-gray-500"
+              }`}
+              disabled={!isValid}
+            >
+              Salvar
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
