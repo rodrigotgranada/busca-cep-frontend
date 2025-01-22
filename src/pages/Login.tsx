@@ -1,59 +1,85 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import TextInput from "../components/Form/TextInput";
+import { login } from "../api/auth";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Credenciais inválidas.");
-      }
-
-      const data = await response.json();
+      const data = await login(username, password);
       localStorage.setItem("token", data.token);
-      alert("Login bem-sucedido!");
+      toast.success("Login bem-sucedido!");
       navigate("/");
     } catch (error) {
       console.error("Erro ao fazer login:", error);
-      setError("Credenciais inválidas. Tente novamente.");
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao fazer login."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const inativeFunction = () => {
+    toast.warning("Função não habilitada!");
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-2xl font-bold mb-6">Login</h1>
-      <div className="w-80 bg-white p-6 rounded shadow-md">
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <input
-          type="text"
-          placeholder="Usuário"
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
+      <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          Bem-vindo
+        </h1>
+        <p className="text-center text-gray-600 mb-8">
+          Por favor, insira suas credenciais para continuar.
+        </p>
+        <TextInput
+          name="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-2 border rounded mb-4"
+          placeholder="Usuário"
+          isLoading={isLoading}
+          error=""
         />
-        <input
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 border rounded mb-4"
-        />
+        <div className="mt-4">
+          <TextInput
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Senha"
+            type="password"
+            isLoading={isLoading}
+            error=""
+          />
+        </div>
         <button
           onClick={handleLogin}
-          className="w-full bg-blue-500 text-white p-2 rounded"
+          className={`w-full p-3 mt-6 rounded-md text-lg font-medium shadow-sm transition-all ${
+            isLoading
+              ? "bg-gray-500 text-gray-300 cursor-not-allowed"
+              : "bg-blue-500 text-white hover:bg-blue-600"
+          }`}
+          disabled={isLoading}
         >
-          Entrar
+          {isLoading ? "Entrando..." : "Entrar"}
         </button>
+        <p className="text-center text-gray-500 mt-6 text-sm">
+          Esqueceu sua senha?{" "}
+          <a
+            href="#"
+            className="text-blue-500 hover:underline hover:text-blue-600"
+            onClick={inativeFunction}
+          >
+            Clique aqui
+          </a>
+        </p>
       </div>
     </div>
   );
