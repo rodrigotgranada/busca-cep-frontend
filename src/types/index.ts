@@ -42,6 +42,7 @@ export interface TextInputProps {
   maskType?: MaskType;
   isLoading?: boolean;
   onButtonClick?: () => void;
+  type?: string;
 }
 
 export interface User {
