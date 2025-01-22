@@ -1,22 +1,21 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import TextInput from "../components/Form/TextInput";
-import { login } from "../api/auth";
+import { login as apiLogin } from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const data = await login(username, password);
-      localStorage.setItem("token", data.token);
+      const data = await apiLogin(username, password);
+      login(data.token);
       toast.success("Login bem-sucedido!");
-      navigate("/");
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       toast.error(

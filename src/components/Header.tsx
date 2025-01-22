@@ -1,14 +1,9 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { logout } from "../api/auth";
 import { FaSearch, FaSignOutAlt } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
 
 const Header: React.FC = () => {
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout(navigate);
-  };
+  const { isAuthenticated, logout } = useAuth();
 
   return (
     <header className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md p-4 flex justify-between items-center">
@@ -16,14 +11,15 @@ const Header: React.FC = () => {
         <FaSearch className="text-white" />
         <h1 className="text-2xl font-bold">Busca CEP</h1>
       </div>
-
-      <button
-        onClick={handleLogout}
-        className="flex items-center space-x-2 bg-red-500 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition duration-200 shadow-md"
-      >
-        <FaSignOutAlt />
-        <span>Logout</span>
-      </button>
+      {isAuthenticated && (
+        <button
+          onClick={logout}
+          className="flex items-center space-x-2 bg-red-500 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition duration-200 shadow-md"
+        >
+          <FaSignOutAlt />
+          <span>Logout</span>
+        </button>
+      )}
     </header>
   );
 };
