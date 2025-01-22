@@ -69,15 +69,24 @@ const Offcanvas: React.FC<OffcanvasProps> = ({ isOpen, onClose, onSave }) => {
       }
 
       const {
-        data: { street, neighborhood, city, state },
+        data: { cep: correctedCep, street, neighborhood, city, state },
+        status,
+        message,
       } = response;
+
+      if (status === 2 && correctedCep !== sanitizedCep) {
+        setValue("cep", correctedCep);
+        setFeedbackMessage(message || "CEP corrigido automaticamente.");
+      } else {
+        setFeedbackMessage("");
+      }
 
       setValue("rua", street || "");
       setValue("bairro", neighborhood || "");
       setValue("cidade", city || "");
       setValue("estado", state || "");
+
       toast.success("Dados do CEP carregados com sucesso!");
-      setFeedbackMessage("");
     } catch (error) {
       console.error("Erro ao buscar o CEP:", error);
       toast.error("Erro ao buscar o CEP.");

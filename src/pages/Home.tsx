@@ -27,32 +27,35 @@ const UserRegistrationPage: React.FC = () => {
   return (
     <>
       <Header />
-      <h1 className="text-2xl font-bold mb-4">Cadastro de Usuários</h1>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Cadastro de Usuários</h1>
+          <button
+            onClick={() => setIsOffcanvasOpen(true)}
+            className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:ring-2 focus:ring-blue-300"
+          >
+            <span className="mr-2">+ Novo Cadastro</span>
+          </button>
+        </div>
 
-      <button
-        onClick={() => setIsOffcanvasOpen(true)}
-        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-      >
-        + Novo Cadastro
-      </button>
-
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-2">Usuários Cadastrados:</h2>
-        {users.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {users.map((user, index) => (
-              <UserCard
-                key={index}
-                nome={user.nome}
-                email={user.email}
-                endereco={`${user.rua}, ${user.numero} - ${user.cidade}/${user.estado}`}
-                complemento={user.complemento}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-600">Nenhum usuário cadastrado ainda.</p>
-        )}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Usuários Cadastrados:</h2>
+          {users.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {users.map((user, index) => (
+                <UserCard
+                  key={index}
+                  nome={user.nome}
+                  email={user.email}
+                  endereco={`${user.rua}, ${user.numero} - ${user.cidade}/${user.estado}`}
+                  complemento={user.complemento}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600">Nenhum usuário cadastrado ainda.</p>
+          )}
+        </div>
       </div>
 
       {/* Offcanvas */}
