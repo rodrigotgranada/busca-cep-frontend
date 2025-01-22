@@ -3,12 +3,13 @@ import MaskedInput from "react-text-mask";
 import { TextInputProps } from "../../types";
 import { maskRules } from "../../types/maskRules";
 import { IoReloadOutline } from "react-icons/io5";
+import { FaSpinner } from "react-icons/fa";
 
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   (
     {
       name,
-      value,
+      value = "",
       onChange,
       placeholder,
       disabled = false,
@@ -24,17 +25,15 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
 
     return (
       <div className="relative w-full">
-        {isLoading ? (
-          <div className="w-full p-2 h-10 bg-gray-200 rounded animate-pulse"></div>
-        ) : mask.length > 0 ? (
-          <MaskedInput
-            mask={mask}
-            value={value}
-            onChange={onChange}
-            onBlur={onBlur}
-            disabled={disabled}
-            render={(inputRef, props) => (
-              <div className="relative">
+        <div className="relative">
+          {mask.length > 0 ? (
+            <MaskedInput
+              mask={mask}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              disabled={disabled || isLoading}
+              render={(inputRef, props) => (
                 <input
                   {...props}
                   ref={(inputElement) => {
@@ -48,43 +47,37 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                     error ? "border-red-500" : "border-gray-300"
                   }`}
                 />
-                {onButtonClick && (
-                  <button
-                    type="button"
-                    onClick={onButtonClick}
-                    className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
-                  >
-                    <IoReloadOutline size={20} />
-                  </button>
-                )}
-              </div>
-            )}
-          />
-        ) : (
-          <div className="relative">
+              )}
+            />
+          ) : (
             <input
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               placeholder={placeholder}
-              disabled={disabled}
+              disabled={disabled || isLoading}
               ref={ref}
               className={`w-full p-2 border rounded pr-10 ${
                 error ? "border-red-500" : "border-gray-300"
               }`}
             />
-            {onButtonClick && (
-              <button
-                type="button"
-                onClick={onButtonClick}
-                className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
-              >
+          )}
+          {onButtonClick && (
+            <button
+              type="button"
+              onClick={onButtonClick}
+              disabled={isLoading}
+              className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+            >
+              {isLoading ? (
+                <FaSpinner className="animate-spin" size={16} />
+              ) : (
                 <IoReloadOutline size={20} />
-              </button>
-            )}
-          </div>
-        )}
+              )}
+            </button>
+          )}
+        </div>
         {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
       </div>
     );
