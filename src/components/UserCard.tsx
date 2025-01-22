@@ -24,6 +24,7 @@ const UserCard: React.FC<UserCardProps> = ({
       </div>
       <button
         onClick={onDelete}
+        aria-label="Excluir usuário"
         className="flex items-center justify-center mt-4 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
       >
         <AiOutlineDelete className="mr-2" size={18} />

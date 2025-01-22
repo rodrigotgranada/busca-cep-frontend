@@ -120,6 +120,7 @@ const Offcanvas: React.FC<OffcanvasProps> = ({ isOpen, onClose, onSave }) => {
   return (
     <div
       id="offcanvas-backdrop"
+      data-testid="offcanvas-backdrop"
       onClick={handleBackdropClick}
       className={`fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-end transition-transform ${
         isOpen
