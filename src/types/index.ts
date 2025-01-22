@@ -61,7 +61,8 @@ export interface UserCardProps {
   nome: string;
   email: string;
   endereco: string;
-  complemento: string;
+  complemento?: string;
+  onDelete: () => void;
 }
 
 export interface FormData {
@@ -74,4 +75,11 @@ export interface FormData {
   estado: string;
   numero: string;
   complemento: string;
+}
+
+export interface ConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  message: string;
 }
