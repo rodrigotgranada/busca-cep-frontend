@@ -112,6 +112,8 @@ const Offcanvas: React.FC<OffcanvasProps> = ({ isOpen, onClose, onSave }) => {
   const onSubmit = (data: FormData) => {
     onSave(data);
     reset();
+    setFeedbackMessage("");
+    setIsLoading(false);
     toast.success("Cadastro realizado com sucesso!");
   };
 

@@ -1,36 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Offcanvas from "../components/Offcanvas";
 import UserCard from "../components/UserCard";
 import ConfirmationModal from "../components/ConfirmationModal";
-import { User } from "../types";
+import { useUsers } from "../context/UsersContext";
 import Header from "../components/Header";
 import { toast } from "react-toastify";
 
 const USERS_PER_PAGE = 4;
 
 const UserRegistrationPage: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const { users, addUser, deleteUser } = useUsers();
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-
-  useEffect(() => {
-    const storedUsers = localStorage.getItem("users");
-    if (storedUsers) {
-      setUsers(JSON.parse(storedUsers));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("users", JSON.stringify(users));
-  }, [users]);
-
-  const addUser = (newUser: User) => {
-    setUsers([...users, newUser]);
-    setIsOffcanvasOpen(false);
-  };
 
   const handleDeleteClick = (index: number) => {
     setUserToDelete(index);
@@ -40,8 +24,7 @@ const UserRegistrationPage: React.FC = () => {
   const confirmDeleteUser = () => {
     if (userToDelete !== null) {
       const deletedUser = users[userToDelete];
-      const updatedUsers = users.filter((_, i) => i !== userToDelete);
-      setUsers(updatedUsers);
+      deleteUser(userToDelete);
       setUserToDelete(null);
       setIsModalOpen(false);
       toast.success(`Usuário ${deletedUser.nome} foi excluído com sucesso!`);
@@ -78,7 +61,7 @@ const UserRegistrationPage: React.FC = () => {
                 <AnimatePresence>
                   {paginatedUsers.map((user, index) => (
                     <UserCard
-                      key={index}
+                      key={startIndex + index}
                       nome={user.nome}
                       email={user.email}
                       endereco={`${user.rua}, ${user.numero} - ${
